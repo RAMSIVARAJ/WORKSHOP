@@ -1,0 +1,195 @@
+#include <AT89S52.h>
+#define DATA P2
+#define RS P3_0
+#define EN P3_1
+#define RW P3_2
+
+
+void lcd_init(void);
+void lcd_data(char);
+void lcd_cmd(char);
+void lcd_busy(void);
+void lcd_print(char*);
+
+void main()
+{
+ EN=0;
+ lcd_init();
+ lcd_print("Welcome to");
+ lcd_cmd(0xC0);
+ lcd_print("KCE - ECE Dept.");
+ while(1)
+ {
+  lcd_cmd(0x1C);
+ }
+}
+
+void lcd_init(void)
+{
+ lcd_busy();
+ lcd_cmd(0x38);
+ lcd_cmd(0x01);
+ lcd_cmd(0x0C);
+ lcd_cmd(0x06);
+ lcd_cmd(0x80);
+}
+
+void lcd_cmd(char c)
+{
+ DATA=c;
+ RS=0;
+ RW=0;
+ EN=1;
+ EN=0;
+ lcd_busy();
+}
+
+void lcd_data(char d)
+{
+ DATA=d;
+ RS=1;
+ RW=0;
+ EN=1;
+ EN=0;
+ lcd_busy();
+}
+
+void lcd_busy()
+{
+ char s;
+ RS=0;
+ RW=1;
+ DATA=0xFF;
+ EN=1;
+ s=DATA&0x80;
+ EN=0;
+ while(s!=0x00)
+ {
+  EN=1;
+  EN=0;
+  s=DATA&0x80;
+ }
+}
+
+void lcd_print(char*msg)
+{
+ while(*msg!=0x00)
+ {
+  lcd_data(*msg);
+  *msg++;
+ }
+}
+
+
+
+
+#include <AT89S52.h>
+#define KEYPAD P0
+const char key[]={0x77,0x7B,0x7D,0x7E,0xB7,0xBB,0xBD,0xBE,0xD7,0xDb,0xDD,0xDE,0xE7,0xEB,0xED,0xEE};
+void main()
+{
+ unsigned char row_val, col_val,i,info;
+ while(1)
+ {
+  KEYPAD=0xF0;
+  row_val=0xFF;
+  while(row_val==0xFF)
+  {
+   row_val=((KEYPAD&0xF0)|0x0F);
+  }
+  KEYPAD=0x0F;
+  col_val=0xFF;
+  while(col_val==0xFF)
+  {
+   col_val=((KEYPAD&0x0F)|0xF0);
+  }
+  info=row_val&col_val;
+ 
+  for(i=0;i<16;i++)
+  {
+   if(info==key[i])
+   {
+    break;
+   }
+   else
+   {
+   }
+  }
+  P2=~i;
+ }
+}
+
+
+
+
+
+#include <AT89S52.h>
+#define FOSC 11059200
+#define TCLK FOSC/12
+#define SCLK TCLK/32
+
+void baud_rate(int);
+void send_msg(char*);
+void delay (char);
+
+void main()
+{
+ baud_rate(9600);
+ P2_0=1;
+ while(1)
+ {
+  if(RI==1)
+  {
+   RI=0;
+   if(SBUF=='1')
+   {
+    send_msg("LED TURNED ON\n\n");
+    P2_0=0;
+   }
+   else if(SBUF=='0')
+   {
+    send_msg("LED TURNED OFF\n\n");
+    P2_0=1;
+   }
+   else
+   {
+    send_msg("Welcome to KCE\n\n");
+   }
+  }
+ }
+}
+
+void baud_rate(int baud)
+{
+ char b;
+ SCON=0X50;
+ TMOD=0x20;
+ b=(0xFF-(SCLK/baud))+1;
+ TH1=b;
+ TL1=b;
+ TR1=1;
+}
+
+void send_msg(char *m)
+{
+ while(*m!=0)
+ {
+  SBUF=*m;
+  *m++;
+  while(TI==0)
+  {}
+  TI=0;
+ }
+}
+
+void delay (char d)
+{
+ char i;
+ int j;
+ for(i=0;i<d;i++)
+ {
+  for(j=0;j<1275;j++)
+  {}
+ }
+}
+
