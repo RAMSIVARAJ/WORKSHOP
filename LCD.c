@@ -61,8 +61,8 @@ void lcd_busy()
  RW=1;
  DATA=0xFF;
  EN=1;
- EN=0;
  s=DATA&0x80;
+ EN=0;
  while(s!=0x00)
  {
   EN=1;
