@@ -16,7 +16,7 @@ void main()
 
 void delay()         /* Define the Delay function */
 {
- unsigned char i;
- for(i=0; i<50 ;i++) /* decrement the count till becomes 0 */
+ int i;
+ for(i=0; i<50000;i++) /* decrement the count till becomes 0 */
  {}
 }
